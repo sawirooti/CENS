@@ -1,6 +1,6 @@
 #pragma once
 
-#include "map.hpp"
+#include "Map.hpp"
 
 struct CENSResult
 {
