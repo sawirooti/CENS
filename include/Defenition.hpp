@@ -23,7 +23,3 @@
 #define BR_PWM 0
 #define BR_CW 0
 #define BR_CCW 0
-
-// Пины дальномера
-
-// Пины гироскопа
