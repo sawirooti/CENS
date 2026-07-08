@@ -9,18 +9,28 @@ void Motor::init()
 
 void Motor::Move_CW()
 {
-    digitalWrite(_pin_cw, HIGH);
-    digitalWrite(_pin_ccw, LOW);
-
-    analogWrite(_pin_pwm, _vel);
+    Move_CW(_vel);
 };
 
 void Motor::Move_CCW()
 {
+    Move_CCW(_vel);
+};
+
+void Motor::Move_CW(uint8_t speed)
+{
+    digitalWrite(_pin_cw, HIGH);
+    digitalWrite(_pin_ccw, LOW);
+
+    analogWrite(_pin_pwm, speed);
+};
+
+void Motor::Move_CCW(uint8_t speed)
+{
     digitalWrite(_pin_cw, LOW);
     digitalWrite(_pin_ccw, HIGH);
 
-    analogWrite(_pin_pwm, _vel);
+    analogWrite(_pin_pwm, speed);
 };
 
 void Motor::Stop()
@@ -89,4 +99,38 @@ void Movement::Neutral()
     FR.Neutral();
     BL.Neutral();
     BR.Neutral();
+};
+
+void Movement::Drive(int16_t left, int16_t right)
+{
+    // ограничиваем диапазон на случай, если извне придёт что-то за пределами -255..255
+    left = constrain(left, -255, 255);
+    right = constrain(right, -255, 255);
+
+    uint8_t leftSpeed = (uint8_t)abs(left);
+    uint8_t rightSpeed = (uint8_t)abs(right);
+
+    // левая сторона: вперёд = CCW (см. Forward())
+    if (left > 0) {
+        FL.Move_CCW(leftSpeed);
+        BL.Move_CCW(leftSpeed);
+    } else if (left < 0) {
+        FL.Move_CW(leftSpeed);
+        BL.Move_CW(leftSpeed);
+    } else {
+        FL.Stop();
+        BL.Stop();
+    }
+
+    // правая сторона: вперёд = CW (см. Forward())
+    if (right > 0) {
+        FR.Move_CW(rightSpeed);
+        BR.Move_CW(rightSpeed);
+    } else if (right < 0) {
+        FR.Move_CCW(rightSpeed);
+        BR.Move_CCW(rightSpeed);
+    } else {
+        FR.Stop();
+        BR.Stop();
+    }
 };

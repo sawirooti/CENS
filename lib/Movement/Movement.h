@@ -23,6 +23,13 @@ class Motor
 
     void Move_CW();
     void Move_CCW();
+
+    // Перегрузки с явно заданной скоростью ШИМ (0..255).
+    // Старое поведение (Move_CW()/Move_CCW() без аргумента) сохранено и просто
+    // использует _vel по умолчанию - существующий код (Forward/Back/TurnLeft/TurnRight) не ломается.
+    void Move_CW(uint8_t speed);
+    void Move_CCW(uint8_t speed);
+
     void Stop();
     void Neutral();
 };
@@ -49,4 +56,9 @@ class Movement
     void TurnLeft();
     void Stop();
     void Neutral();
+
+    // Дифференциальное управление (skid-steering).
+    // left / right: -255..255, знак задаёт направление стороны, модуль - скорость ШИМ.
+    // Позволяет одновременно ехать и поворачивать (арифметика микширования выполняется вызывающей стороной).
+    void Drive(int16_t left, int16_t right);
 };
