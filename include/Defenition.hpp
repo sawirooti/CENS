@@ -2,10 +2,17 @@
 
 #define SPEED 255
 
-// Размеры карты
-#define LENGTH 200
-#define WIDTH 100
-#define DELTA 10     // шаг карты
+#define X_START 0
+#define Y_START 0
+#define PSI_START 0
+
+#define X_GOAL 5
+#define Y_GOAL 5
+
+// Размеры карты (миллиметры)
+#define LENGTH 1500
+#define WIDTH 1000
+#define DELTA 100     // шаг карты
 
 // Пины моторов
 #define FL_PWM 10

@@ -48,7 +48,7 @@ int CENS::findExtremum(float distanceFront,
 
     for (int i = 0; i < _referenceMap.getCount(); ++i)
     {
-        const Point& point = _referenceMap.getPoint(i);
+        const Point point = _referenceMap.getPoint(i);
         const float correlation =
             calculateCorrelation(distanceFront,
                                  distanceRight,
@@ -84,7 +84,7 @@ CENSResult CENS::calculatePosition(float distanceFront,
         return result;
     }
 
-    const Point& point = _referenceMap.getPoint(maximumIndex);
+    const Point point = _referenceMap.getPoint(maximumIndex);
     result.x = point.x;
     result.y = point.y;
     result.valid = true;
