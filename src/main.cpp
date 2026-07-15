@@ -1,43 +1,13 @@
 #include <Arduino.h>
 #include "MPU6050/MPU6050.h"
 #include "VL53L0X/VL53L0X.h"
+#include "filter.h"
 
 MPU6050 gyro;
 VL53L0X distance;
 
 static float teta = 0;
 static uint32_t lastMicros = 0;
-
-struct DistanceKalman{
-    double x = 0.0;
-
-    double P = 1000.0;
-    double Q = 900;
-    double R = 400;
-
-    bool initialized = false;
-
-    double update(double z){
-            if(!initialized){
-                x = z;
-                initialized = true;
-                return x;
-            }
-
-            P = P + Q;
-
-            double y = z - x;
-            double S = P + R;
-            double K = P / S;
-
-            x = x + K * y;
-            P = (1.0 - K) * P;
-
-            return x;
-        }
-};
-
-DistanceKalman k;
 
 void setup()
 {
@@ -110,10 +80,8 @@ void loop()
         Serial.print(distance.lastError());
     }
 
-    k.initialized = true;
-
-    Serial.print(" | Kalman Distance: ");
-    Serial.println(k.update(distanceMm));
+    Serial.print(" | Median Distance: ");
+    Serial.println(getMedianFilter(distanceMm));
 
     delay(100);
 }
