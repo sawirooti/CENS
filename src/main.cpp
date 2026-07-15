@@ -9,6 +9,23 @@ VL53L0X distance;
 static float teta = 0;
 static uint32_t lastMicros = 0;
 
+constexpr double PI_VALUE =
+    3.14159265358979323846;
+
+RobotState initialState(
+    0.0, // x, mm
+    0.0, // y, mm
+    0.0  // theta, rad
+);
+
+KensKalmanFilter3D kalmanFilter(
+    initialState,
+    30.0,                      // sigma Q позиции, mm
+    2.0 * PI_VALUE / 180.0,    // sigma Q угла, rad
+    20.0,                      // sigma R позиции, mm
+    1.0 * PI_VALUE / 180.0     // sigma R угла, rad
+);
+
 void setup()
 {
     Serial.begin(9600);
@@ -82,6 +99,36 @@ void loop()
 
     Serial.print(" | Median Distance: ");
     Serial.println(getMedianFilter(distanceMm));
+
+    delay(100);
+
+    RobotState measurement(
+        500.0,
+        300.0,
+        0.25
+    );
+
+    if (!kalmanFilter.predict()) {
+        Serial.println("Ошибка predict");
+        return;
+    }
+
+    if (!kalmanFilter.update(measurement)) {
+        Serial.println("Ошибка update");
+        return;
+    }
+
+    const RobotState state =
+        kalmanFilter.getState();
+
+    Serial.print("X: ");
+    Serial.print(state.x);
+
+    Serial.print(" Y: ");
+    Serial.print(state.y);
+
+    Serial.print(" Theta: ");
+    Serial.println(state.theta);
 
     delay(100);
 }
