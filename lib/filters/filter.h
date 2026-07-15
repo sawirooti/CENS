@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <math.h>
+#include "CENS.h"
 
 #define WINDOW_SIZE 3
 
@@ -37,27 +38,6 @@ float getMedianFilter(float newVal) {
 // ============================================================
 // Состояние машинки
 // ============================================================
-
-struct RobotState {
-    double x = 0.0;      // mm
-    double y = 0.0;      // mm
-    double theta = 0.0;  // rad
-
-    RobotState()
-        : x(0.0),
-          y(0.0),
-          theta(0.0) {
-    }
-
-    RobotState(
-        double xValue,
-        double yValue,
-        double thetaValue)
-        : x(xValue),
-          y(yValue),
-          theta(thetaValue) {
-    }
-};
 
 // ============================================================
 // Простой вектор из трёх элементов
@@ -272,7 +252,7 @@ struct Matrix3x3 {
 class KensKalmanFilter3D {
 public:
     KensKalmanFilter3D(
-        const RobotState& initialState,
+        const Position& initialState,
         double sigmaQPosition,
         double sigmaQAngle,
         double sigmaRPosition,
@@ -348,7 +328,7 @@ public:
         return true;
     }
 
-    bool update(const RobotState& measurement) {
+    bool update(const Position& measurement) {
         if (!valid_ || !isValidState(measurement)) {
             return false;
         }
@@ -434,7 +414,7 @@ public:
         return true;
     }
 
-    RobotState getState() const {
+    Position getState() const {
         return state_;
     }
 
@@ -458,7 +438,7 @@ private:
     }
 
     static bool isValidState(
-        const RobotState& state) {
+        const Position& state) {
 
         return
             isfinite(state.x) &&
@@ -468,7 +448,7 @@ private:
 
     bool valid_ = false;
 
-    RobotState state_{};
+    Position state_{};
 
     Matrix3x3 P_{};
     Matrix3x3 Q_{};

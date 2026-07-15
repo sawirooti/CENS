@@ -6,7 +6,20 @@ struct Position
 {
     float x;
     float y;
-    bool valid;
+    float theta;
+    bool valid = true;
+
+    Position()
+        : x(0.0f),
+          y(0.0f),
+          theta(0.0f){
+    }
+
+    Position(float xValue, float yValue, float thetaValue)
+        : x(xValue),
+          y(yValue),
+          theta(thetaValue) {
+    }
 };
 
 class CENS

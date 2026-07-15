@@ -1,13 +1,11 @@
-#include <Arduino.h>
 #include "Map.h"
-#include "CENS.h"
 #include "filter.h"
 #include "MPU6050/MPU6050.h"
 #include "VL53L0X/VL53L0X.h"
 #include "AngleEstimator.h"
 #include "Movement.h"
 
-RobotState start(X_START, Y_START, PSI_START);
+Position start(X_START, Y_START, PSI_START);
 Map karta;
 CENS cens(karta);
 KensKalmanFilter3D Kalman(start, 1, 1, 1, 1);
@@ -26,7 +24,7 @@ static float half_S;
 static uint32_t lastMicros = micros();
 static uint32_t Micros = micros();
 static float gyroZ = 0;
-static RobotState position;
+static Position position;
 static float last_d;
 
 void setup()
