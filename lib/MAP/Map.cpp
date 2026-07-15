@@ -1,4 +1,4 @@
-#include "map.hpp"
+#include "Map.h"
 
 #if defined(ARDUINO_ARCH_AVR)
 #include <avr/pgmspace.h>

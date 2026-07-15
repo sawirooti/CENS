@@ -2,7 +2,7 @@
 
 #include "Map.h"
 
-struct CENSResult
+struct Position
 {
     float x;
     float y;
@@ -14,7 +14,7 @@ class CENS
 public:
     CENS(const Map& referenceMap) : _referenceMap(referenceMap) {}
 
-    CENSResult calculatePosition(float distanceFront, float distanceRight) const;
+    Position calculatePosition(float distanceFront, float distanceRight) const;
 
 private:
     const Map& _referenceMap;

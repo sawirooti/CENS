@@ -70,10 +70,10 @@ int CENS::findExtremum(float distanceFront,
     return maximumIndex;
 }
 
-CENSResult CENS::calculatePosition(float distanceFront,
+Position CENS::calculatePosition(float distanceFront,
                                    float distanceRight) const
 {
-    CENSResult result;
+    Position result;
     float maximumCorrelation = -1.0f;
     const int maximumIndex =
         findExtremum(distanceFront, distanceRight, &maximumCorrelation);
