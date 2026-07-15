@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "MPU6050/MPU6050.h"
 #include "VL53L0X/VL53L0X.h"
+#include "filter.h"
 
 MPU6050 gyro;
 VL53L0X distance;
@@ -33,6 +34,7 @@ void loop()
 
     const bool gyroOk = gyro.readGyroZDegreesPerSecond(&gyroZ);
     const bool distanceOk = distance.readDistanceMillimeters(&distanceMm);
+    const float dt = (uint32_t)(nowMicros - lastMicros) / 1000000.0f;
 
     Serial.print("Gyro Z: ");
     if (gyroOk)
@@ -47,7 +49,6 @@ void loop()
     }
     if (lastMicros != 0 && gyroOk)
     {
-        const float dt = (uint32_t)(nowMicros - lastMicros) / 1000000.0f;
         teta += gyroZ * dt;
     }
 
@@ -69,15 +70,18 @@ void loop()
     if (distanceOk)
     {
         Serial.print(distanceMm);
-        Serial.println(" mm");
+        Serial.print(" mm");
     }
     else
     {
         Serial.print(distanceMm);
         Serial.print(" mm");
         Serial.print(" error ");
-        Serial.println(distance.lastError());
+        Serial.print(distance.lastError());
     }
+
+    Serial.print(" | Median Distance: ");
+    Serial.println(getMedianFilter(distanceMm));
 
     delay(100);
 }
