@@ -62,17 +62,21 @@ void Movement::Back()
 void Movement::TurnRight()
 {
     FL.Move_CCW();
-    FR.Move_CCW();
+    // FR.Move_CCW();
     BL.Move_CCW();
-    BR.Move_CCW();
+    // BR.Move_CCW();
+    FR.Stop();
+    BR.Stop();
 };
 
 void Movement::TurnLeft()
 {
-    FL.Move_CW();
+    // FL.Move_CW();
     FR.Move_CW();
-    BL.Move_CW();
+    // BL.Move_CW();
     BR.Move_CW();
+    FL.Stop();
+    BL.Stop();
 };
 
 void Movement::Stop()

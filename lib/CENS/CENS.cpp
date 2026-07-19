@@ -85,8 +85,8 @@ Position CENS::calculatePosition(float distanceFront,
     }
 
     const Point point = _referenceMap.getPoint(maximumIndex);
-    result.x = point.x;
-    result.y = point.y;
+    result.x = point.x / DELTA;
+    result.y = point.y / DELTA;
     result.valid = true;
     return result;
 }

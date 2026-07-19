@@ -275,7 +275,7 @@ public:
 
         // Начальная стандартная неопределённость.
         constexpr double initialSigmaPosition =
-            100.0; // mm
+            1.0; // координаты сетки
 
         constexpr double initialSigmaAngle =
             0.05; // rad

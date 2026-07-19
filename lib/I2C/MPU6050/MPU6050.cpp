@@ -24,7 +24,9 @@ bool MPU6050::begin()
 
     uint8_t whoAmI = 0;
     _lastError = _i2c.readRegister(_address, REG_WHO_AM_I, &whoAmI);
-    if (_lastError != 0 || (whoAmI & 0x7E) != 0x68)
+    const bool supportedDevice =
+        (whoAmI & 0x7E) == 0x68 || whoAmI == 0x70;
+    if (_lastError != 0 || !supportedDevice)
     {
         if (_lastError == 0)
         {
