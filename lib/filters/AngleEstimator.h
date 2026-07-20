@@ -19,6 +19,7 @@ public:
     void update(float gyroZDps, float dtSeconds);
 
     float getAngle() const;
+    bool setAngle(float angle);
 
 private:
     static float normalize(float angleDeg);

@@ -79,3 +79,13 @@ float AngleEstimator::normalize(float angleDeg)
     angleDeg = fmodf(angleDeg, 360.0f);
     return angleDeg < 0.0f ? angleDeg + 360.0f : angleDeg;
 }
+
+bool AngleEstimator::setAngle(float angle)
+{
+    if (angle <= 360 && angle >= 0)
+    {
+        _angleDeg = angle;
+        return true;
+    }
+    return false;
+}

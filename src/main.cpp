@@ -10,6 +10,7 @@
 
 enum class WorkState
 {
+    CalcStart,
     Calibration,
     CourseCalculation,
     Rotation,
@@ -34,10 +35,10 @@ Position start(X_START,
 Map karta;
 CENS cens(karta);
 KensKalmanFilter3D Kalman(start,
-                          1.0,
+                          5.5,
                           2.0 * DEG_TO_RAD_VALUE,
-                          0.1,
-                          3.0 * DEG_TO_RAD_VALUE);
+                          0.01,
+                          0.5 * DEG_TO_RAD_VALUE);
 MPU6050 gyro;
 VL53L0X dist;
 AngleEstimator teta(PSI_START);
@@ -108,10 +109,12 @@ void setup()
         stateStartMs = millis();
         Serial.println("STATE -> CALIBRATION: initial stop");
     }
+
 }
 
 void loop()
 {
+
     if (state == WorkState::Finish)
     {
         Car.Stop();
@@ -298,8 +301,12 @@ void loop()
         const uint32_t currentMicros = micros();
         const float dt = (uint32_t)(currentMicros - lastMicros) / 1000000.0f;
         lastMicros = currentMicros;
-        teta.update(gyroZ, dt);
 
+        Serial.print("ROTATION gyroZ: ");
+        Serial.println(gyroZ);
+
+        teta.update(gyroZ, dt);
+        targetAngle = 270;
         float angleError = targetAngle - teta.getAngle();
         if (angleError > 180.0f) angleError -= 360.0f;
         if (angleError < -180.0f) angleError += 360.0f;
@@ -453,6 +460,14 @@ void loop()
         }
 
         position = Kalman.getState();
+        if (position.theta < 0)
+        {
+            teta.setAngle(position.theta * RAD_TO_DEG + 360);
+        }
+        else
+        {
+            teta.setAngle(position.theta * RAD_TO_DEG);
+        }
         // position = censPosition;
 
         Serial.print("LOCALIZATION input front/right mm: ");
@@ -467,6 +482,10 @@ void loop()
         Serial.print(position.x);
         Serial.print(" / ");
         Serial.println(position.y);
+        Serial.print("LOCALIZATION theta / Kalman_theta: ");
+        Serial.print(censPosition.theta * RAD_TO_DEG);
+        Serial.print(" / ");
+        Serial.println(position.theta * RAD_TO_DEG);
         Serial.print("LOCALIZATION Kalman-CENS error: ");
         Serial.print(position.x - censPosition.x);
         Serial.print(" / ");

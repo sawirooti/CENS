@@ -275,7 +275,7 @@ public:
 
         // Начальная стандартная неопределённость.
         constexpr double initialSigmaPosition =
-            1.0; // координаты сетки
+            10.0; // координаты сетки
 
         constexpr double initialSigmaAngle =
             0.05; // rad
@@ -416,6 +416,17 @@ public:
 
     Position getState() const {
         return state_;
+    }
+
+    void setState(const Position& newState) {
+        if (!isValidState(newState)) {
+            valid_ = false;
+            return;
+        }
+
+        state_ = newState;
+        state_.theta =
+            normalizeAngle(state_.theta);
     }
 
 private:

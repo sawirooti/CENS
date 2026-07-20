@@ -3,11 +3,11 @@
 #define SPEED 180
 
 #define X_START 0
-#define Y_START 5
+#define Y_START 10
 #define PSI_START 0
 
-#define X_GOAL 1
-#define Y_GOAL 8
+#define X_GOAL 2
+#define Y_GOAL 11
 
 // Размеры карты (миллиметры)
 #define LENGTH 1500
