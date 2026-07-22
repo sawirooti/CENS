@@ -31,7 +31,15 @@ const uint16_t CALIBRATION_RATE_HZ = 100;
 
 Position start(0,
                0,
-               PSI_START * DEG_TO_RAD_VALUE);
+               PSI_START *DEG_TO_RAD_VALUE);
+
+Position accumulatedDelta(0.0f,
+                          0.0f,
+                          0.0f);
+
+static float previousKalmanAngleRad =
+    PSI_START * DEG_TO_RAD_VALUE;
+    
 Map karta;
 CENS cens(karta);
 KensKalmanFilter3D Kalman(start,
@@ -111,7 +119,6 @@ void setup()
         stateStartMs = millis();
         Serial.println("STATE -> CALIBRATION: initial stop");
     }
-
 }
 
 void loop()
@@ -161,7 +168,7 @@ void loop()
         return;
     }
 
-    //filteredDistance = getMedianFilter((float)rawDistance);
+    // filteredDistance = getMedianFilter((float)rawDistance);
     filteredDistance = (float)rawDistance;
     if (distanceSampleCount < WINDOW_SIZE)
     {
@@ -322,15 +329,18 @@ void loop()
         // Курс 0 градусов направлен по +Y, положительный угол - поворот влево.
         targetAngle = atan2f(-deltaX, deltaY) / DEG_TO_RAD_VALUE;
         targetAngle = fmodf(targetAngle, 360.0f);
-        if (targetAngle < 0.0f) targetAngle += 360.0f;
+        if (targetAngle < 0.0f)
+            targetAngle += 360.0f;
 
         // Длина физического участка нужна в миллиметрах для дальномера.
         segmentLength = remainingDistance * DELTA / 3.0f;
         segmentPassed = 0.0f;
 
         float angleError = targetAngle - teta.getAngle();
-        if (angleError > 180.0f) angleError -= 360.0f;
-        if (angleError < -180.0f) angleError += 360.0f;
+        if (angleError > 180.0f)
+            angleError -= 360.0f;
+        if (angleError < -180.0f)
+            angleError += 360.0f;
         lastteta = teta.getAngle();
 
         Serial.print("COURSE current/target/error deg: ");
@@ -370,8 +380,10 @@ void loop()
 
         teta.update(gyroZ, dt);
         float angleError = targetAngle - teta.getAngle();
-        if (angleError > 180.0f) angleError -= 360.0f;
-        if (angleError < -180.0f) angleError += 360.0f;
+        if (angleError > 180.0f)
+            angleError -= 360.0f;
+        if (angleError < -180.0f)
+            angleError += 360.0f;
 
         if ((uint32_t)(millis() - lastPrintMs) >= 250)
         {
@@ -442,8 +454,10 @@ void loop()
         teta.update(gyroZ, dt);
 
         float courseError = targetAngle - teta.getAngle();
-        if (courseError > 180.0f) courseError -= 360.0f;
-        if (courseError < -180.0f) courseError += 360.0f;
+        if (courseError > 180.0f)
+            courseError -= 360.0f;
+        if (courseError < -180.0f)
+            courseError += 360.0f;
 
         const float distanceChange = previousDistance - filteredDistance;
         previousDistance = filteredDistance;
@@ -458,11 +472,16 @@ void loop()
             distanceFront -= passedY;
             segmentPassed += distanceChange;
 
-            if (distanceRight < 0.0f) distanceRight = 0.0f;
-            if (distanceRight > WIDTH) distanceRight = WIDTH;
-            if (distanceFront < 0.0f) distanceFront = 0.0f;
-            if (distanceFront > LENGTH) distanceFront = LENGTH;
-            if (segmentPassed < 0.0f) segmentPassed = 0.0f;
+            if (distanceRight < 0.0f)
+                distanceRight = 0.0f;
+            if (distanceRight > WIDTH)
+                distanceRight = WIDTH;
+            if (distanceFront < 0.0f)
+                distanceFront = 0.0f;
+            if (distanceFront > LENGTH)
+                distanceFront = LENGTH;
+            if (segmentPassed < 0.0f)
+                segmentPassed = 0.0f;
         }
         else
         {
@@ -531,14 +550,34 @@ void loop()
         }
 
         censPosition.theta = teta.getAngle() * DEG_TO_RAD_VALUE;
-        if (!Kalman.predict() || !Kalman.update(censPosition))
+
+        const float currentAngleRad =
+            teta.getAngle() *
+            DEG_TO_RAD_VALUE;
+
+        accumulatedDelta.theta =
+            KensKalmanFilter3D::normalizeAngle(
+                currentAngleRad -
+                previousKalmanAngleRad);
+
+        if (!Kalman.predict(accumulatedDelta))
         {
             state = WorkState::Error;
-            Serial.println("STATE -> ERROR: Kalman predict/update failed");
+            Serial.println(
+                "STATE -> ERROR: Kalman predict failed");
+            break;
+        }
+
+        if (!Kalman.update(censPosition))
+        {
+            state = WorkState::Error;
+            Serial.println(
+                "STATE -> ERROR: Kalman update failed");
             break;
         }
 
         position = Kalman.getState();
+
         if (position.theta < 0)
         {
             teta.setAngle(position.theta * RAD_TO_DEG + 360);
@@ -547,6 +586,12 @@ void loop()
         {
             teta.setAngle(position.theta * RAD_TO_DEG);
         }
+
+        previousKalmanAngleRad = position.theta;
+
+        accumulatedDelta = Position(0.0f,
+                                    0.0f,
+                                    0.0f);
 
         Serial.print("LOCALIZATION input front/right mm: ");
         Serial.print(censInputFront);
