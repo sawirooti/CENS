@@ -13,7 +13,7 @@ static_assert(WIDTH == 1000 && LENGTH == 1500 && DELTA == 100,
 #define MAP_POINT(xIndex, yIndex)                                           \
     {                                                                       \
         LENGTH - (yIndex) * DELTA, WIDTH - (xIndex) * DELTA,                \
-        (xIndex) * DELTA, (yIndex) * DELTA                                  \
+        (xIndex), (yIndex)                                 \
     }
 
 #define MAP_COLUMN(xIndex)                                                  \

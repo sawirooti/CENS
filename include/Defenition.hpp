@@ -2,12 +2,12 @@
 
 #define SPEED 180
 
-#define X_START 0
-#define Y_START 10
+// #define X_START 0
+// #define Y_START 10
 #define PSI_START 0
 
-#define X_GOAL 2
-#define Y_GOAL 11
+#define X_GOAL 7.8
+#define Y_GOAL 12.3
 
 // Размеры карты (миллиметры)
 #define LENGTH 1500

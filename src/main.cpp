@@ -29,8 +29,8 @@ const float MAX_DISTANCE_CHANGE_MM = 100.0f;
 const uint32_t CALIBRATION_TIME_MS = 1000;
 const uint16_t CALIBRATION_RATE_HZ = 100;
 
-Position start(X_START,
-               Y_START,
+Position start(0,
+               0,
                PSI_START * DEG_TO_RAD_VALUE);
 Map karta;
 CENS cens(karta);
@@ -45,18 +45,19 @@ AngleEstimator teta(PSI_START);
 Movement Car;
 
 static WorkState state = WorkState::Calibration;
-static WorkState stateAfterCalibration = WorkState::CourseCalculation;
+static WorkState stateAfterCalibration = WorkState::CalcStart;
 static Position position = start;
 
 // Дальности до стен по направлениям +Y и +X в системе координат карты.
-static float distanceFront = LENGTH - Y_START * DELTA;
-static float distanceRight = WIDTH - X_START * DELTA;
+static float distanceFront = 0;
+static float distanceRight = 0;
 static float targetAngle = PSI_START;
 static float segmentLength = 0.0f;
 static float segmentPassed = 0.0f;
 static float filteredDistance = 0.0f;
 static float previousDistance = 0.0f;
 static float gyroZ = 0.0f;
+static bool finishStart = false;
 
 static uint16_t rawDistance = 0;
 static uint8_t distanceSampleCount = 0;
@@ -114,7 +115,6 @@ void setup()
 
 void loop()
 {
-
     if (state == WorkState::Finish)
     {
         Car.Stop();
@@ -189,6 +189,66 @@ void loop()
 
     switch (state)
     {
+    case WorkState::CalcStart:
+    {
+        Serial.print("CALCSTART ");
+        if (distanceFront == 0)
+        {
+
+            if (fabsf(teta.getAngle()) > ANGLE_TOLERANCE_DEG)
+            {
+                Serial.println(teta.getAngle());
+                targetAngle = 0;
+                state = WorkState::Rotation;
+                break;
+            }
+            else
+            {
+                dist.readDistanceMillimeters(&rawDistance);
+                distanceFront = ((float)rawDistance);
+                Serial.print("distanceFront = ");
+                Serial.println(distanceFront);
+            }
+        }
+        else
+        {
+            if (fabsf(teta.getAngle() - 270) > ANGLE_TOLERANCE_DEG)
+            {
+                targetAngle = 270;
+                state = WorkState::Rotation;
+                break;
+            }
+            else
+            {
+                dist.readDistanceMillimeters(&rawDistance);
+                distanceRight = ((float)rawDistance);
+                distanceFront += 90;
+
+                start = cens.calculatePosition(distanceFront, distanceRight);
+                start.theta = teta.getAngle();
+                finishStart = true;
+                position = start;
+                Kalman.setState(start);
+                state = WorkState::Calibration;
+                stateAfterCalibration = WorkState::CourseCalculation;
+
+                Serial.print("distanceFront = ");
+                Serial.print(distanceFront);
+                Serial.print(", distanceRight = ");
+                Serial.println(distanceRight);
+
+                Serial.print("FINISH CALCSTART. X_START = ");
+                Serial.print(start.x);
+                Serial.print(", Y_START = ");
+                Serial.print(start.y);
+                Serial.print(", THETA_START = ");
+                Serial.println(start.theta);
+
+                break;
+            }
+        }
+        break;
+    }
     case WorkState::Calibration:
     {
         Car.Stop();
@@ -306,7 +366,6 @@ void loop()
         Serial.println(gyroZ);
 
         teta.update(gyroZ, dt);
-        targetAngle = 270;
         float angleError = targetAngle - teta.getAngle();
         if (angleError > 180.0f) angleError -= 360.0f;
         if (angleError < -180.0f) angleError += 360.0f;
@@ -337,12 +396,23 @@ void loop()
 
         if (fabsf(angleError) <= ANGLE_TOLERANCE_DEG)
         {
-            Car.Stop();
-            stateAfterCalibration = WorkState::ForwardMovement;
-            state = WorkState::Calibration;
-            stateStartMs = millis();
-            Serial.println("ROTATION complete, command: STOP");
-            Serial.println("STATE -> CALIBRATION after rotation");
+            if (finishStart)
+            {
+                Car.Stop();
+                stateAfterCalibration = WorkState::ForwardMovement;
+                state = WorkState::Calibration;
+                stateStartMs = millis();
+                Serial.println("ROTATION complete, command: STOP");
+                Serial.println("STATE -> CALIBRATION after rotation");
+            }
+            else
+            {
+                Car.Stop();
+                state = WorkState::CalcStart;
+                stateStartMs = millis();
+                Serial.println("ROTATION complete, command: STOP");
+                Serial.println("STATE -> CALCSTART after rotation");
+            }
         }
         else if (angleError > 0.0f)
         {
@@ -468,7 +538,6 @@ void loop()
         {
             teta.setAngle(position.theta * RAD_TO_DEG);
         }
-        // position = censPosition;
 
         Serial.print("LOCALIZATION input front/right mm: ");
         Serial.print(censInputFront);
