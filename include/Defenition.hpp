@@ -6,8 +6,8 @@
 // #define Y_START 10
 #define PSI_START 0
 
-#define X_GOAL 7.8
-#define Y_GOAL 12.3
+#define X_GOAL 7
+#define Y_GOAL 12
 
 // Размеры карты (миллиметры)
 #define LENGTH 1500
@@ -19,11 +19,11 @@
 #define FL_CW 5
 #define FL_CCW 4
 
-#define FR_PWM 10
+#define FR_PWM 12
 #define FR_CW 3
 #define FR_CCW 2
 
-#define BL_PWM 12
+#define BL_PWM 10
 #define BL_CW 6
 #define BL_CCW 7
 

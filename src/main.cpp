@@ -22,7 +22,7 @@ enum class WorkState
 
 const float PI_VALUE = 3.14159265358979323846f;
 const float DEG_TO_RAD_VALUE = PI_VALUE / 180.0f;
-const float FINISH_RADIUS = 1.0f;
+const float FINISH_RADIUS = 2.5f;
 const float ANGLE_TOLERANCE_DEG = 3.0f;
 const float COURSE_ERROR_LIMIT_DEG = 7.0f;
 const float MAX_DISTANCE_CHANGE_MM = 100.0f;
@@ -65,6 +65,7 @@ static uint32_t lastMicros = 0;
 static uint32_t lastPrintMs = 0;
 static uint32_t stateStartMs = 0;
 static bool sensorsReady = false;
+static float lastteta = 0;
 
 void setup()
 {
@@ -160,7 +161,8 @@ void loop()
         return;
     }
 
-    filteredDistance = getMedianFilter((float)rawDistance);
+    //filteredDistance = getMedianFilter((float)rawDistance);
+    filteredDistance = (float)rawDistance;
     if (distanceSampleCount < WINDOW_SIZE)
     {
         ++distanceSampleCount;
@@ -225,7 +227,7 @@ void loop()
                 distanceFront += 90;
 
                 start = cens.calculatePosition(distanceFront, distanceRight);
-                start.theta = teta.getAngle();
+                start.theta = teta.getAngle() * DEG_TO_RAD_VALUE;
                 finishStart = true;
                 position = start;
                 Kalman.setState(start);
@@ -323,12 +325,13 @@ void loop()
         if (targetAngle < 0.0f) targetAngle += 360.0f;
 
         // Длина физического участка нужна в миллиметрах для дальномера.
-        segmentLength = remainingDistance * DELTA * 0.5f;
+        segmentLength = remainingDistance * DELTA / 3.0f;
         segmentPassed = 0.0f;
 
         float angleError = targetAngle - teta.getAngle();
         if (angleError > 180.0f) angleError -= 360.0f;
         if (angleError < -180.0f) angleError += 360.0f;
+        lastteta = teta.getAngle();
 
         Serial.print("COURSE current/target/error deg: ");
         Serial.print(teta.getAngle());
@@ -399,10 +402,16 @@ void loop()
             if (finishStart)
             {
                 Car.Stop();
+                Serial.println(distanceFront);
+                Serial.println(distanceRight);
+                distanceFront -= (300 * (cos(teta.getAngle() * DEG_TO_RAD_VALUE) - cos(lastteta * DEG_TO_RAD_VALUE)));
+                distanceRight -= (300 * (sin(lastteta * DEG_TO_RAD_VALUE) - sin(teta.getAngle() * DEG_TO_RAD_VALUE)));
                 stateAfterCalibration = WorkState::ForwardMovement;
                 state = WorkState::Calibration;
                 stateStartMs = millis();
                 Serial.println("ROTATION complete, command: STOP");
+                Serial.println(distanceFront);
+                Serial.println(distanceRight);
                 Serial.println("STATE -> CALIBRATION after rotation");
             }
             else
